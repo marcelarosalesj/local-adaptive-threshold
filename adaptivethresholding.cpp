@@ -16,17 +16,18 @@ http://www.learnopencv.com/applycolormap-for-pseudocoloring-in-opencv-c-python/
 using namespace cv;
 using namespace std; // for the cout...
 
-void getHistogram(Mat input){
+int getHistogram(Mat input){
 	std::vector<int> hist(256,0);
 	int biggest = 0;
+	int bpos=0;
 	// Store pixels' values
-	cout << "cols: "<<input.cols << "rows:" <<input.rows<< endl;
 	for(int i = 0; i < input.rows; i++){
 		for(int j = 0; j < input.cols; j++){
 			 hist[ int(input.at<uchar>(i,j)) ]  += 1;
-			 if(hist[ int(input.at<uchar>(i,j)) ] > biggest)
+			 if(hist[ int(input.at<uchar>(i,j)) ] > biggest){
 			 	biggest = hist[ int(input.at<uchar>(i,j)) ];
-
+			 	bpos = j;
+			 }			 	
 		}
 	}
 	// Generate histogram
@@ -39,7 +40,67 @@ void getHistogram(Mat input){
 	}
 	// Display histogram
 	imshow("Histogram", display);
+	return bpos;
 }
+
+Mat localAdaptiveThresholding(Mat input, int granularity){
+	Mat output(input.rows, input.cols, CV_8UC1, Scalar(0));
+	cout << "INPUT R:"<<input.rows<<" C:"<<input.cols<<endl;
+		
+	int dx, dx2, dy, dy2;
+	dx = input.cols/granularity;
+	dx2 = input.cols/granularity + input.cols%granularity;
+	dy = input.rows/granularity;
+	dy2 = input.rows/granularity + input.rows%granularity;
+
+	cout << " dx: " << dx << " dx2: " << dx2 << endl;
+	cout << " dy: " << dy << " dy2: " << dy2 << endl;
+
+	// Rect(int x, int y, int width, int height)
+	for(int i=0; i<granularity; i++){
+		for(int j=0; j<granularity; j++){
+
+			if( i < (granularity-1) ){
+
+				
+				if( j < (granularity-1) ){
+					cout << " CONTAINER 1    (" << i<< "," <<j <<")" <<endl;
+					Mat roi = input( Rect(j*dx, i*dy, dx, dy ) );
+					imshow("ROI", roi);
+					waitKey(0);
+				} else {
+					cout << " CONTAINER 2    (" << i<< "," <<j <<")" <<endl;
+					Mat roi = input( Rect(j*dx, i*dy, dx2, dy ) );
+					imshow("ROI", roi);
+					waitKey(0);
+
+				}
+
+			} else {
+				if( j < (granularity-1) ){
+					cout << " CONTAINER 3    (" << i<< "," <<j <<")" <<endl;
+					Mat roi2 = input( Rect(j*dx, i*dy, dx, dy2 ) );
+					imshow("ROI", roi2);				
+					waitKey(0);
+				} else {
+					cout << " CONTAINER 4    (" << i<< "," <<j <<")" <<endl;
+					Mat roi = input( Rect(j*dx, i*dy, dx2, dy2 ) );
+					imshow("ROI", roi);
+					waitKey(0);
+
+				}
+
+
+
+
+			}
+
+		}
+	}
+
+
+	return output;
+}	
 
 int main()
 {
@@ -48,10 +109,8 @@ int main()
 	resize(img, img, Size(img.cols/2, img.rows/2));
 	imshow("Image", img);
 
-	// Get histogram from input image
-	getHistogram(img);
-
 	// OpenCV histogram function
+	// http://docs.opencv.org/2.4/doc/tutorials/imgproc/histograms/histogram_calculation/histogram_calculation.html
 	Mat g_hist;
 	int histSize = 256;
 	float range[] = { 0, 256 } ; //the upper boundary is exclusive
@@ -70,17 +129,33 @@ int main()
 	                     Point( bin_w*(i), hist_h - cvRound(g_hist.at<float>(i)) ),
 	                     Scalar( 255), 2, 8, 0  );
 	}
-
-	namedWindow("calcHist Demo", CV_WINDOW_AUTOSIZE );
 	imshow("calcHist Demo", histImage );
 
 
+	// Get histogram from input image
+	int threshold_value;
+	threshold_value = getHistogram(img);
+
 	// Normal Threshold
-	//Mat imgth( img.rows, img.cols, CV_8UC1, Scalar(0) );
-	//threshold( img, imgth, threshold_value, max_BINARY_value, BINARY );
+	Mat imgth( img.rows, img.cols, CV_8UC1, Scalar(0) );
+	//int threshold_value = 200;
+	int const max_BINARY_value = 255;
+	int threshold_type = 1;
+		 /* 0: Binary
+		    1: Binary Inverted
+		    2: Threshold Truncated
+		    3: Threshold to Zero
+		    4: Threshold to Zero Inverted
+		  */
+	cout << " threshold_value = "<< threshold_value << " type:" << threshold_type<<endl;
+	threshold( img, imgth, threshold_value, max_BINARY_value, threshold_type );
 
+	imshow("Image Threshold", imgth);
 
-	//imshow("Image Threshold", imgth);
+	// Local Adaptive Threshold
+	Mat imgth_2( img.rows, img.cols, CV_8UC1, Scalar(0) );
+	imgth_2 = localAdaptiveThresholding(img, 5);
+	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
 
 	waitKey(0);
     cout<<"Goodbye!"<<endl;
