@@ -50,8 +50,7 @@ int getHistogram(Mat input){
 		display.at<uchar>(  (localheight-1) - hist[i] * (localheight-1)/(data.high+0) , i) = 255;
 
 	}
-	// Display histogram
-	imshow("Histogram", display);
+
 
 	// Get the half
 	double areahalf = (input.rows*input.cols/2);
@@ -64,11 +63,16 @@ int getHistogram(Mat input){
 			flag=false;
 	}
 	cout << "THE INDEX IS    "<<idx<<endl;
+	cout << "   area: "<< data.half <<endl;
 	data.halfindex=idx;
 	// Draw half
-	for(int i=0; i < input.rows; i++){
-		display.at<uchar>( i, idx ) = 200;
+	for(int i=0; i < display.rows; i++){
+		display.at<uchar>( i, idx ) = 180;
 	}
+
+
+	// Display histogram
+	imshow("Histogram", display);
 
 	return data.halfindex;
 }
@@ -103,7 +107,9 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
 					
 					imshow("ROI TH", roith);
-					waitKey(0);
+					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
+
+					//waitKey(0);
 
 
 
@@ -120,7 +126,8 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
 					
 					imshow("ROI TH", roith);
-					waitKey(0);
+					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
+					//waitKey(0);
 
 
 				}
@@ -138,7 +145,8 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
 					
 					imshow("ROI TH", roith);
-					waitKey(0);
+					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
+					//waitKey(0);
 
 
 
@@ -155,7 +163,8 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
 					
 					imshow("ROI TH", roith);
-					waitKey(0);
+					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
+					//waitKey(0);
 
 
 
@@ -225,7 +234,7 @@ int main()
 	*/
 	// Local Adaptive Threshold
 	Mat imgth_2( img.rows, img.cols, CV_8UC1, Scalar(0) );
-	imgth_2 = localAdaptiveThresholding(img, 4);
+	imgth_2 = localAdaptiveThresholding(img, 6);
 	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
 
 	waitKey(0);
