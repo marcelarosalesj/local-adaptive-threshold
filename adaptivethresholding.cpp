@@ -109,7 +109,7 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					imshow("ROI TH", roith);
 					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
 
-					//waitKey(0);
+					waitKey(0);
 
 
 
@@ -127,7 +127,7 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					
 					imshow("ROI TH", roith);
 					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
-					//waitKey(0);
+					waitKey(0);
 
 
 				}
@@ -146,7 +146,7 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					
 					imshow("ROI TH", roith);
 					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
-					//waitKey(0);
+					waitKey(0);
 
 
 
@@ -164,7 +164,7 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 					
 					imshow("ROI TH", roith);
 					roith.copyTo(output(cv::Rect(j*dx,i*dy,roith.cols, roith.rows)));
-					//waitKey(0);
+					waitKey(0);
 
 
 
@@ -234,7 +234,7 @@ int main()
 	*/
 	// Local Adaptive Threshold
 	Mat imgth_2( img.rows, img.cols, CV_8UC1, Scalar(0) );
-	imgth_2 = localAdaptiveThresholding(img, 6);
+	imgth_2 = localAdaptiveThresholding(img, 4);
 	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
 
 	waitKey(0);
