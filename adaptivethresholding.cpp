@@ -16,17 +16,29 @@ http://www.learnopencv.com/applycolormap-for-pseudocoloring-in-opencv-c-python/
 using namespace cv;
 using namespace std; // for the cout...
 
+
+struct HistData {
+	int high;
+	int highpos;
+	int half;
+	int halfindex;
+
+};
+
+
 int getHistogram(Mat input){
 	std::vector<int> hist(256,0);
-	int biggest = 0;
-	int bpos=0;
+	HistData data;
+	data.high = 0;
+	data.highpos = 0;
+	data.half = 0;
 	// Store pixels' values
 	for(int i = 0; i < input.rows; i++){
 		for(int j = 0; j < input.cols; j++){
 			 hist[ int(input.at<uchar>(i,j)) ]  += 1;
-			 if(hist[ int(input.at<uchar>(i,j)) ] > biggest){
-			 	biggest = hist[ int(input.at<uchar>(i,j)) ];
-			 	bpos = j;
+			 if(hist[ int(input.at<uchar>(i,j)) ] > data.high){
+			 	data.high = hist[ int(input.at<uchar>(i,j)) ];
+			 	data.highpos = j;
 			 }			 	
 		}
 	}
@@ -34,13 +46,31 @@ int getHistogram(Mat input){
 	int localheight=256*1;
 	Mat display(localheight , 256, CV_8UC1, Scalar(0) );
 	for(int i = 0; i < 256 ; i++){
-		// cout << int(hist[i]) << " (" << hist[i] * (localheight-1)/(biggest+0) <<  ") , " << i << endl;
-		display.at<uchar>(  (localheight-1) - hist[i] * (localheight-1)/(biggest+0) , i) = 255;
+		// cout << int(hist[i]) << " (" << hist[i] * (localheight-1)/(data.high+0) <<  ") , " << i << endl;
+		display.at<uchar>(  (localheight-1) - hist[i] * (localheight-1)/(data.high+0) , i) = 255;
 
 	}
 	// Display histogram
 	imshow("Histogram", display);
-	return bpos;
+
+	// Get the half
+	double areahalf = (input.rows*input.cols/2);
+	bool flag=true;
+	int idx = 0;
+	while(flag){
+		data.half += hist[idx];
+		idx++;
+		if(data.half >= areahalf)
+			flag=false;
+	}
+	cout << "THE INDEX IS    "<<idx<<endl;
+	data.halfindex=idx;
+	// Draw half
+	for(int i=0; i < input.rows; i++){
+		display.at<uchar>( i, idx ) = 200;
+	}
+
+	return data.halfindex;
 }
 
 Mat localAdaptiveThresholding(Mat input, int granularity){
@@ -59,41 +89,82 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 	// Rect(int x, int y, int width, int height)
 	for(int i=0; i<granularity; i++){
 		for(int j=0; j<granularity; j++){
-
 			if( i < (granularity-1) ){
-
-				
 				if( j < (granularity-1) ){
 					cout << " CONTAINER 1    (" << i<< "," <<j <<")" <<endl;
 					Mat roi = input( Rect(j*dx, i*dy, dx, dy ) );
 					imshow("ROI", roi);
+
+					Mat roith;
+					int tv = getHistogram(roi);
+					cout << "EN LATH::"<<tv<<endl;
+					int const max_BINARY_value = 255;
+					int threshold_type = 1;
+					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
+					
+					imshow("ROI TH", roith);
 					waitKey(0);
+
+
+
 				} else {
 					cout << " CONTAINER 2    (" << i<< "," <<j <<")" <<endl;
 					Mat roi = input( Rect(j*dx, i*dy, dx2, dy ) );
 					imshow("ROI", roi);
+
+					Mat roith;
+					int tv = getHistogram(roi);
+					cout << "EN LATH::"<<tv<<endl;
+					int const max_BINARY_value = 255;
+					int threshold_type = 1;
+					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
+					
+					imshow("ROI TH", roith);
 					waitKey(0);
 
-				}
 
+				}
 			} else {
 				if( j < (granularity-1) ){
 					cout << " CONTAINER 3    (" << i<< "," <<j <<")" <<endl;
-					Mat roi2 = input( Rect(j*dx, i*dy, dx, dy2 ) );
-					imshow("ROI", roi2);				
+					Mat roi = input( Rect(j*dx, i*dy, dx, dy2 ) );
+					imshow("ROI", roi);	
+
+					Mat roith;
+					int tv = getHistogram(roi);
+					cout << "EN LATH::"<<tv<<endl;
+					int const max_BINARY_value = 255;
+					int threshold_type = 1;
+					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
+					
+					imshow("ROI TH", roith);
 					waitKey(0);
+
+
+
 				} else {
 					cout << " CONTAINER 4    (" << i<< "," <<j <<")" <<endl;
 					Mat roi = input( Rect(j*dx, i*dy, dx2, dy2 ) );
 					imshow("ROI", roi);
+
+					Mat roith;
+					int tv = getHistogram(roi);
+					cout << "EN LATH::"<<tv<<endl;
+					int const max_BINARY_value = 255;
+					int threshold_type = 1;
+					threshold( roi, roith, tv, max_BINARY_value, threshold_type );
+					
+					imshow("ROI TH", roith);
 					waitKey(0);
+
+
+
 
 				}
 
-
-
-
 			}
+
+			
 
 		}
 	}
@@ -133,7 +204,7 @@ int main()
 
 
 	// Get histogram from input image
-	int threshold_value;
+	/*int threshold_value;
 	threshold_value = getHistogram(img);
 
 	// Normal Threshold
@@ -141,20 +212,20 @@ int main()
 	//int threshold_value = 200;
 	int const max_BINARY_value = 255;
 	int threshold_type = 1;
-		 /* 0: Binary
-		    1: Binary Inverted
-		    2: Threshold Truncated
-		    3: Threshold to Zero
-		    4: Threshold to Zero Inverted
-		  */
+		 	//0: Binary
+		    //1: Binary Inverted
+		    //2: Threshold Truncated
+		    //3: Threshold to Zero
+		    //4: Threshold to Zero Inverted
+		  
 	cout << " threshold_value = "<< threshold_value << " type:" << threshold_type<<endl;
 	threshold( img, imgth, threshold_value, max_BINARY_value, threshold_type );
 
 	imshow("Image Threshold", imgth);
-
+	*/
 	// Local Adaptive Threshold
 	Mat imgth_2( img.rows, img.cols, CV_8UC1, Scalar(0) );
-	imgth_2 = localAdaptiveThresholding(img, 5);
+	imgth_2 = localAdaptiveThresholding(img, 4);
 	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
 
 	waitKey(0);
