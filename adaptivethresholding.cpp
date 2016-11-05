@@ -19,11 +19,14 @@ using namespace std;
 struct HistData {
 	int high;		// Amount of pixels in the highest valley
 	int highpos;	// Position of the highest
+	int high2;		// Amount of pixels in the second highest valley
+	int high2pos;	// Position of the second highest
 	int half;		// 1/2 of total amount of pixels in the image
 	int halfindex;	// Position of half
 	int first; 		// First position [0-255]
 	int last; 		// Last position [0-255]
 	int middle;		// Middle position [0-255]
+
 
 };
 
@@ -33,6 +36,8 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 	HistData data; 	// Here we're going to store the data for this histogram
 	data.high = 0;	
 	data.highpos = 0;
+	data.high2 = 0;
+	data.high2pos = 0;
 	data.half = 0;
 	// Store pixels' values
 	for(int i = 0; i < input.rows; i++) {
@@ -41,8 +46,11 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 			hist[ int(input.at<uchar>(i,j)) ]  += 1; 
 			// Check if that value is the highest
 			if( hist[int(input.at<uchar>(i,j))] > data.high ){
+				//data.high2 = data.high; // Not the way
+				//data.high2pos = data.high2pos;
 				data.high = hist[ int(input.at<uchar>(i,j)) ]; 	// Amount of pixels
-			 	data.highpos = j;								// Position of the highest 
+			 	data.highpos = j;								// Position of the highest
+
 			}			 	
 		}
 	}
@@ -53,7 +61,6 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 	for(int i = 0; i < 256 ; i++){
 		// cout << int(hist[i]) << " (" << hist[i] * (localheight-1)/(data.high+0) <<  ") , " << i << endl;
 		display.at<uchar>(  (localheight-1) - hist[i] * (localheight-1)/(data.high+0) , i) = 255;
-
 	}
 
 
@@ -87,10 +94,12 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 
 	// Draw half, last and first
 	for(int i=0; i < display.rows; i++){
-		display.at<uchar>( i, data.halfindex ) = 180;
-		display.at<uchar>( i, data.first ) = 180;
-		display.at<uchar>( i, data.last ) = 180;
-		display.at<uchar>( i, data.middle ) = 180;
+		//display.at<uchar>( i, data.halfindex ) = 180;
+		//display.at<uchar>( i, data.first ) = 180;
+		//display.at<uchar>( i, data.last ) = 180;
+		//display.at<uchar>( i, data.middle ) = 180;
+		display.at<uchar>( i, data.highpos ) = 255;
+		display.at<uchar>( i, data.high2pos ) = 255;
 	}
 
 	// Display histogram
