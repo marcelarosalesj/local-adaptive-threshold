@@ -12,6 +12,7 @@ http://www.learnopencv.com/applycolormap-for-pseudocoloring-in-opencv-c-python/
 #include <stdio.h>
 #include <stdlib.h>
 #include <vector>
+#include <stack>
 
 using namespace cv;
 using namespace std;
@@ -21,14 +22,15 @@ struct HistData {
 	int highpos;	// Position of the highest
 	int high2;		// Amount of pixels in the second highest valley
 	int high2pos;	// Position of the second highest
+	int meanHighest;
 	int half;		// 1/2 of total amount of pixels in the image
 	int halfindex;	// Position of half
 	int first; 		// First position [0-255]
 	int last; 		// Last position [0-255]
 	int middle;		// Middle position [0-255]
-
-
 };
+
+
 
 
 struct HistData getHistogram(Mat input, bool showDisplay){
@@ -39,6 +41,7 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 	data.high2 = 0;
 	data.high2pos = 0;
 	data.half = 0;
+
 	// Store pixels' values
 	for(int i = 0; i < input.rows; i++) {
 		for(int j = 0; j < input.cols; j++) {
@@ -64,6 +67,52 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 	}
 
 
+	// Get two highest peaks
+	stack<int> peaks;
+	stack<int> valleys;
+	int last=0, next=0;
+	bool growing=true;
+	for(int i=0; i<hist.size(); i++){
+		if(growing){
+			if( (hist[i]-last)>=0 ){
+				last = hist[i];
+			} else {
+				peaks.push(i);
+				growing=false;
+			}
+		} else if(!growing){
+			if( (hist[i]-last )<=0 ){
+				last = hist[i];
+			} else {
+				valleys.push(i);
+				growing=true;
+			}
+		}
+	}
+
+	cout << "PEAKS"<<endl;
+	while(!peaks.empty()){
+		int p = peaks.top();
+		cout << p << " : "<<hist[p] <<endl;
+		peaks.pop();
+
+		for(int i=0; i < display.rows; i++){
+			display.at<uchar>( i, p) = 255;
+		}
+
+	}
+	/*cout << "VALEYYS"<<endl;
+	while(!valleys.empty()){
+		int v = valleys.top();
+		cout << v <<endl;
+		valleys.pop();
+		for(int i=0; i < display.rows; i++){
+			display.at<uchar>( i, v) = 255;
+		}
+	}*/
+
+	
+
 	// Get the half 
 	double areahalf = (input.rows*input.cols/2); // Amount of pixels in the half
 	bool flag=true;
@@ -82,7 +131,7 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 			i=hist.size()+1;
 		}
 	}
-	// Get fast
+	// Get last
 	for(int i=hist.size()-1; i>0; i--){
 		if(hist[i] != 0){
 			data.last = i;
@@ -93,14 +142,14 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 	data.middle = (data.first+data.last)/2;
 
 	// Draw half, last and first
-	for(int i=0; i < display.rows; i++){
+	/*for(int i=0; i < display.rows; i++){
 		//display.at<uchar>( i, data.halfindex ) = 180;
 		//display.at<uchar>( i, data.first ) = 180;
 		//display.at<uchar>( i, data.last ) = 180;
 		//display.at<uchar>( i, data.middle ) = 180;
 		display.at<uchar>( i, data.highpos ) = 255;
 		display.at<uchar>( i, data.high2pos ) = 255;
-	}
+	}*/
 
 	// Display histogram
 	if(showDisplay){
