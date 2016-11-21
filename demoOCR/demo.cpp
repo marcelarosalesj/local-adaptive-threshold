@@ -267,14 +267,15 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 int main(int argc, char* argv[]) {
 
 
+
     if (argc < 3) { // We expect 3 arguments: the program name, the source path and the destination path
         std::cerr << "Usage: " << argv[0] << " FILENAME NUM_DIV" << std::endl;
         return 1;
     }
 
 	// Read image
-	string filename = argv[1];
-	Mat img = imread("img/"+filename+".jpg",CV_LOAD_IMAGE_GRAYSCALE);
+	string fn = argv[1];
+	Mat img = imread("img/"+fn+".jpg",CV_LOAD_IMAGE_GRAYSCALE);
 	resize(img, img, Size(img.cols/2, img.rows/2));
 	imshow("Image", img);
 
@@ -282,22 +283,72 @@ int main(int argc, char* argv[]) {
 	struct HistData threshold_value;
 	threshold_value = getHistogram(img, true);
 
-	Mat imgth_2 = localAdaptiveThresholding(img, atoi( argv[2]) );
-	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
+	Mat imgth = localAdaptiveThresholding(img, atoi( argv[2]) );
+	imshow("Image Threshold 2 (Local Adaptive)", imgth);	
 
 	string vocabulary = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // must have the same order as the clasifier output classes
 
- 	Ptr<OCRHMMDecoder::ClassifierCallback> ocr = loadOCRHMMClassifierCNN("OCRBeamSearch_CNN_model_data.xml");
- 	
+
+	// Method one
+ 	// Worked
+ 	Ptr<OCRHMMDecoder::ClassifierCallback> ocr = loadOCRHMMClassifierCNN("OCRBeamSearch_CNN_model_data.xml"); 	
+
 	double t_r = (double)getTickCount();
     vector<int> out_classes;
     vector<double> out_confidences;
 
     ocr->eval(img, out_classes, out_confidences);
-
+    
     cout << "OCR output = \"" << vocabulary[out_classes[0]] 
     	 << "\" with confidence " << out_confidences[0] << ". Evaluated in "
 		 << ((double)getTickCount() - t_r)*1000/getTickFrequency() << " ms." << endl << endl;
+
+
+/*
+	// Method two
+	// Didn't find anything
+ 	Ptr< OCRBeamSearchDecoder::ClassifierCallback> ocr = loadOCRBeamSearchClassifierCNN("OCRBeamSearch_CNN_model_data.xml");
+ 	vector<int> out_classes;
+    vector< vector<double> > probabilities;
+	ocr->eval(imgth, probabilities, out_classes);
+	cout << " 1) "<< out_classes.empty() << endl;
+	cout << " 2) "<< probabilities.empty() << endl;
+
+*/
+
+/*
+	// Method three
+	// Didn't find anything :(
+	
+	Mat transition_probabilities;
+    string filename = "OCRHMM_transitions_table.xml";
+    FileStorage fs(filename, FileStorage::READ);
+    fs["transition_probabilities"] >> transition_probabilities;
+	fs.release();
+    
+    Mat emission_probabilities = Mat::eye((int)vocabulary.size(), (int)vocabulary.size(), CV_64FC1);
+
+
+    Ptr< OCRBeamSearchDecoder > ocr = OCRBeamSearchDecoder::create(
+    			loadOCRBeamSearchClassifierCNN("OCRBeamSearch_CNN_model_data.xml"),
+    			vocabulary,
+    			transition_probabilities,
+    			emission_probabilities,
+    			OCR_DECODER_VITERBI, 
+    			500 );
+
+	string output;
+    cout << "HOLA"<<endl;
+	vector<Rect> * component_rects = NULL;
+	vector<string> * component_texts = NULL;
+	vector<float> * component_confidences = NULL;
+	int component_level = 2 ;
+
+
+    ocr->run(imgth, output, component_rects, component_texts, component_confidences, OCR_LEVEL_WORD );
+    cout << "OUTPUT:"<<output<<":"<<endl;
+
+*/
 
 
 	waitKey(0);
