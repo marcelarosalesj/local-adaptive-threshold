@@ -17,6 +17,7 @@ https://github.com/opencv/opencv_contrib/blob/master/modules/text/samples/charac
 #include <vector>
 #include <stack>
 #include <opencv2/text.hpp>
+#include <opencv2/text/ocr.hpp>
 
 using namespace cv;
 using namespace std;
@@ -270,11 +271,9 @@ int main(int argc, char* argv[]) {
         std::cerr << "Usage: " << argv[0] << " FILENAME NUM_DIV" << std::endl;
         return 1;
     }
-cout << "noo";
+
 	// Read image
 	string filename = argv[1];
-	//cout << "file:"; cin >> filename;
-cout << "prob";
 	Mat img = imread("img/"+filename+".jpg",CV_LOAD_IMAGE_GRAYSCALE);
 	resize(img, img, Size(img.cols/2, img.rows/2));
 	imshow("Image", img);
@@ -283,27 +282,22 @@ cout << "prob";
 	struct HistData threshold_value;
 	threshold_value = getHistogram(img, true);
 
-cout << "he";
-	//int divisions;
-	//cout << "divisions:";cin >> divisions;
 	Mat imgth_2 = localAdaptiveThresholding(img, atoi( argv[2]) );
 	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
-	
 
 	string vocabulary = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"; // must have the same order as the clasifier output classes
 
- 	Ptr<OCRHMMDecoder::ClassifierCallback> ocr = loadOCRHMMClassifierCNN("OCRBeamSearch_CNN_model_data.xml.gz");
-
+ 	Ptr<OCRHMMDecoder::ClassifierCallback> ocr = loadOCRHMMClassifierCNN("OCRBeamSearch_CNN_model_data.xml");
+ 	
 	double t_r = (double)getTickCount();
-	    vector<int> out_classes;
-	    vector<double> out_confidences;
+    vector<int> out_classes;
+    vector<double> out_confidences;
 
-	    ocr->eval(img, out_classes, out_confidences);
+    ocr->eval(img, out_classes, out_confidences);
 
-	    cout << "OCR output = \"" << vocabulary[out_classes[0]] << "\" with confidence "
-	         << out_confidences[0] << ". Evaluated in "
-	<< ((double)getTickCount() - t_r)*1000/getTickFrequency() << " ms." << endl << endl;
-
+    cout << "OCR output = \"" << vocabulary[out_classes[0]] 
+    	 << "\" with confidence " << out_confidences[0] << ". Evaluated in "
+		 << ((double)getTickCount() - t_r)*1000/getTickFrequency() << " ms." << endl << endl;
 
 
 	waitKey(0);
