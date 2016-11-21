@@ -91,10 +91,10 @@ struct HistData getHistogram(Mat input, bool showDisplay){
 		}
 	}
 
-	cout << "PEAKS"<<endl;
+	//cout << "PEAKS"<<endl;
 	while(!peaks.empty()){
 		int p = peaks.top();
-		cout << p << " : "<<hist[p] <<endl;
+		//cout << p << " : "<<hist[p] <<endl;
 		peaks.pop();
 
 		for(int i=0; i < display.rows; i++){
@@ -262,8 +262,13 @@ Mat localAdaptiveThresholding(Mat input, int granularity){
 	return output;
 }	
 
-int main()
-{
+int main(int argc, char * argv[] ) {
+	if(argc < 2){
+		std::cerr << "Usage: " << argv[0] << "  NUM_DIV" << std::endl; 
+		return -1;
+	}
+
+
 	// Read image
 	Mat img = imread("chronology.jpg",CV_LOAD_IMAGE_GRAYSCALE);
 	resize(img, img, Size(img.cols/2, img.rows/2));
@@ -313,12 +318,10 @@ int main()
 	
 	// Local Adaptive Threshold
 	Mat imgth_2( img.rows, img.cols, CV_8UC1, Scalar(0) );
-	cout << "n?"<<endl;
-	cout << " (The input matrix will be divided in n*n subregions for the locally adaptive threshold)" << endl;
-	int n;
-	cin >> n;
-	imgth_2 = localAdaptiveThresholding(img, n);
+	imgth_2 = localAdaptiveThresholding(img, atoi( argv[1]) ) ;
 	imshow("Image Threshold 2 (Local Adaptive)", imgth_2);	
+
+	imwrite( "./chronology_th.jpg", imgth_2 );
 
 	waitKey(0);
     cout<<"Goodbye!"<<endl;
