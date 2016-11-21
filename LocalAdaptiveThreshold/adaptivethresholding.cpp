@@ -13,6 +13,7 @@ http://www.learnopencv.com/applycolormap-for-pseudocoloring-in-opencv-c-python/
 #include <stdlib.h>
 #include <vector>
 #include <stack>
+#include <opencv2/text.hpp>
 
 using namespace cv;
 using namespace std;
